@@ -1,0 +1,23 @@
+# Ignore Python cache directories
+__pycache__/
+*.py[cod]
+
+# Ignore Flask session files
+flask_session/
+
+# Ignore log files
+*.log
+
+# Ignore local configuration files
+*.env
+*.ini
+*.local
+
+# Ignore virtual environment directories
+venv/
+env/
+ENV/
+.venv/
+
+# Ignore other files
+run.txt
