@@ -1,0 +1,48 @@
+.login-image {
+    background-image: url('/static/login-emp-img.png');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+}
+.form-control-sm {
+    padding: 0.5rem;
+}
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+/* Google Colors */
+.google-blue { color: #4285F4; }
+.google-red { color: #EA4335; }
+.google-yellow { color: #FBBC05; }
+.google-green { color: #34A853; }        
+
+/* Button logo */
+.btn-google, .btn-github {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    color: #333;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-google:hover, .btn-github:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.icon {
+    display: inline-block;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
+
+.btn-google .icon {
+    background: url('google-logo.svg') no-repeat center;
+}
+
+.btn-github .icon {
+    background: url('github-logo.svg') no-repeat center;
+}

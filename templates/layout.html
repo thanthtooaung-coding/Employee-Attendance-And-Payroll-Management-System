@@ -15,10 +15,16 @@
     <title>{{ project_name }}: {{ title }}</title>
 
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
         .nav-link {
             color: #212529;
         }
-        .nav-link.active {
+        .nav-link.active {            
             color: white;
         }
         .user-bar {
@@ -36,6 +42,15 @@
             white-space: normal;
             padding: 0.5rem 1rem;
         }
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #f8f9fa;
+            padding: 1rem 0;
+            text-align: center;
+        }
 
     </style>
 </head>
@@ -49,29 +64,29 @@
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
-                    <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}" aria-current="{% if request.path == '/' %}page{% endif %}">Dashboard</a>
+                    <a href="/" class="nav-link {% if request.path == '/' %}active active-bg{% endif %}" aria-current="{% if request.path == '/' %}page{% endif %}">Dashboard</a>
                 </li>
                 <li>
-                    <a href="/division" class="nav-link {% if request.path == '/division' %}active{% endif %}" aria-current="{% if request.path == '/division' %}page{% endif %}">Division</a>
+                    <a href="/division" class="nav-link {% if request.path.startswith('/division') %}active{% endif %}" aria-current="{% if request.path.startswith('/division') %}page{% endif %}">Division</a>
                 </li>
                 <li>
-                    <a href="/department" class="nav-link {% if request.path == '/department' %}active{% endif %}" aria-current="{% if request.path == '/department' %}page{% endif %}">Department</a>
+                    <a href="/department" class="nav-link {% if request.path.startswith('/department') %}active{% endif %}" aria-current="{% if request.path.startswith('/department') %}page{% endif %}">Department</a>
                 </li>
                 <li>
-                    <a href="/team" class="nav-link {% if request.path == '/team' %}active{% endif %}" aria-current="{% if request.path == '/team' %}page{% endif %}">Team</a>
+                    <a href="/team" class="nav-link {% if request.path.startswith('/team') %}active{% endif %}" aria-current="{% if request.path.startswith('/team') %}page{% endif %}">Team</a>
                 </li>
                 <li>
-                    <a href="/employee" class="nav-link {% if request.path == '/employee' %}active{% endif %}" aria-current="{% if request.path == '/employee' %}page{% endif %}">Employee</a>
+                    <a href="/employee" class="nav-link {% if request.path.startswith('/employee') %}active{% endif %}" aria-current="{% if request.path.startswith('/employee') %}page{% endif %}">Employee</a>
                 </li>
                 <li>
-                    <a href="/role" class="nav-link {% if request.path == '/role' %}active{% endif %}" aria-current="{% if request.path == '/role' %}page{% endif %}">Role</a>
+                    <a href="/role" class="nav-link {% if request.path.startswith('/role') %}active{% endif %}" aria-current="{% if request.path.startswith('/role') %}page{% endif %}">Role</a>
                 </li>
                 <li>
                     <a href="/leave" class="nav-link {% if request.path == '/leave' %}active{% endif %}" aria-current="{% if request.path == '/leave' %}page{% endif %}">Leave</a>
                 </li>
             </ul>
             <hr>
-            <div class="dropdown">
+            <div class="dropdown" style="z-index: 1;">
                 <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
                     <img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Lisa_-_Moonlit_Floor.png" alt="" width="32" height="32" class="rounded-circle me-2">
                     <strong>Thant Htoo Aung</strong>
@@ -89,6 +104,11 @@
         <div class="flex-grow-1 p-2">
             <!-- Horizontal User Bar -->
             <div class="user-bar d-flex justify-content-end align-items-center">
+                <div class="me-3">
+                    <div id="date" class="fw-bold" style="color: #007bff;"></div>
+                    <div id="clock" class="fw-bold" style="color: #007bff;"></div>
+                </div>
+
                 <div class="dropdown me-3">
                     <a href="#" class="link-dark text-decoration-none dropdown-toggle" id="dropdownNotifications" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell" style="font-size: 1.5rem;"></i>
@@ -119,13 +139,52 @@
             <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mt-3">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/">VinnTrack</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                    <li class="breadcrumb-item"><a href="/">{{ project_name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ request.path | format_breadcrumb }}</li>
                 </ol>
-            </nav>
-            {% block main %}{% endblock %}
+            </nav>                        
+
+            <div class="flex-grow-1">
+                {% block main %}{% endblock %}
+            </div>
+            
+            <footer class="mt-auto py-3 bg-light">
+                <div class="container text-center">
+                    <span class="text-muted">&copy; {{ project_name }} {{ current_year }}. All rights reserved.</span>
+                </div>
+            </footer>
+
         </div>
     </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('clock').textContent = timeString;
+        }
+
+        function updateDate() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('date').textContent = dateString;
+        }
+
+        updateDate();
+        setInterval(updateDate, 86400000);
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach((alert) => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+    </script>
 
     
 </body>
