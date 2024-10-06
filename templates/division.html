@@ -49,8 +49,8 @@
                         <tr>
                             <th scope="row">{{ (page - 1) * 5 + loop.index }}</th>
                             <td>{{ division.name }}</td>
-                            <td>{{ division.employee_count }}</td>
-                            <td>{{ division.employee_count }}</td>
+                            <td>{{ division.department_count }}</td>
+                            <td>{{ division.team_count }}</td>
                             <td>{{ division.employee_count }}</td>
                             <td class="text-end">
                                 <a href="{{ url_for('edit_division', division_id=division.id) }}" class="btn btn-warning btn-sm me-1">
