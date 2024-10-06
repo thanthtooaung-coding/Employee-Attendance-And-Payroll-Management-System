@@ -64,28 +64,28 @@
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
-                    <a href="/" class="nav-link {% if request.path == '/' %}active active-bg{% endif %}" aria-current="{% if request.path == '/' %}page{% endif %}">Dashboard</a>
+                    <a href="/" class="nav-link {% if request.path == '/' %}active active-bg{% endif %}">Dashboard</a>
                 </li>
                 <li>
-                    <a href="/division" class="nav-link {% if request.path.startswith('/division') %}active{% endif %}" aria-current="{% if request.path.startswith('/division') %}page{% endif %}">Division</a>
+                    <a href="/division" class="nav-link {% if request.path.startswith('/division') %}active{% endif %}">Division</a>
                 </li>
                 <li>
-                    <a href="/department" class="nav-link {% if request.path.startswith('/department') %}active{% endif %}" aria-current="{% if request.path.startswith('/department') %}page{% endif %}">Department</a>
+                    <a href="/department" class="nav-link {% if request.path.startswith('/department') %}active{% endif %}">Department</a>
                 </li>
                 <li>
-                    <a href="/team" class="nav-link {% if request.path.startswith('/team') %}active{% endif %}" aria-current="{% if request.path.startswith('/team') %}page{% endif %}">Team</a>
+                    <a href="/team" class="nav-link {% if request.path.startswith('/team') %}active{% endif %}">Team</a>
                 </li>
                 <li>
-                    <a href="/employee" class="nav-link {% if request.path.startswith('/employee') %}active{% endif %}" aria-current="{% if request.path.startswith('/employee') %}page{% endif %}">Employee</a>
+                    <a href="/employee" class="nav-link {% if request.path.startswith('/employee') %}active{% endif %}">Employee</a>
                 </li>
                 <li>
-                    <a href="/role" class="nav-link {% if request.path.startswith('/role') %}active{% endif %}" aria-current="{% if request.path.startswith('/role') %}page{% endif %}">Role</a>
+                    <a href="/role" class="nav-link {% if request.path.startswith('/role') %}active{% endif %}">Role</a>
                 </li>
                 <li>
-                    <a href="/leave" class="nav-link {% if request.path == '/leave' %}active{% endif %}" aria-current="{% if request.path == '/leave' %}page{% endif %}">Leave</a>
+                    <a href="/leave" class="nav-link {% if request.path == '/leave' %}active{% endif %}">Leave</a>
                 </li>
             </ul>
-            <hr>
+            <hr style="z-index: 1;">
             <div class="dropdown" style="z-index: 1;">
                 <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
                     <img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Lisa_-_Moonlit_Floor.png" alt="" width="32" height="32" class="rounded-circle me-2">
@@ -131,7 +131,7 @@
                     <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser">                        
                         <li><a class="dropdown-item" href="/profile">Profile</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">Sign out</a></li>
+                        <li><a class="dropdown-item" href="/sign_out">Sign out</a></li>
                     </ul>
                 </div>
             </div>
@@ -148,10 +148,15 @@
                 {% block main %}{% endblock %}
             </div>
             
-            <footer class="mt-auto py-3 bg-light">
+            <footer class="mt-auto py-2 bg-light">
                 <div class="container text-center">
                     <span class="text-muted">&copy; {{ project_name }} {{ current_year }}. All rights reserved.</span>
                 </div>
+                <form action="https://validator.w3.org/check" class="text-center" enctype="multipart/form-data" method="post" target="_blank">
+                    <input name="doctype" type="hidden" value="HTML5">
+                    <input name="fragment" type="hidden">
+                    <input alt="Validate" src="/static/I_heart_validator.png" type="image"> <!-- https://validator.w3.org/ -->
+                </form>
             </footer>
 
         </div>
@@ -175,17 +180,28 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        document.addEventListener('DOMContentLoaded', (event) => {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach((alert) => {
-            setTimeout(() => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }, 5000);
-        });
-    });
-    </script>
+        // document.addEventListener('DOMContentLoaded', (event) => {
+        //     const alerts = document.querySelectorAll('.alert');
+        //     alerts.forEach((alert) => {
+        //         setTimeout(() => {
+        //             const bsAlert = new bootstrap.Alert(alert);
+        //             bsAlert.close();
+        //         }, 5000);
+        //     });
+        // });
 
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adapted from https://stackoverflow.com/a/10162353
+            const html = '<!DOCTYPE ' +
+            document.doctype.name +
+            (document.doctype.publicId ? ' PUBLIC "' + document.doctype.publicId + '"' : '') +
+            (!document.doctype.publicId && document.doctype.systemId ? ' SYSTEM' : '') +
+            (document.doctype.systemId ? ' "' + document.doctype.systemId + '"' : '') +
+            '>\n' + document.documentElement.outerHTML;
+            document.querySelector('form[action="https://validator.w3.org/check"] > input[name="fragment"]').value = html;
+        });
+    </script>
+    <script src="/static/search.js"></script>
     
 </body>
 </html>
