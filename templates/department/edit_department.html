@@ -1,48 +1,25 @@
-{% extends "layout.html" %}
+{% extends "form_layout.html" %}
 
-{% block main %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4">Edit Department</h1>
+{% block form_title %}Edit Department{% endblock %}
 
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="department_name" class="form-label">Department Name</label>
-                            <input type="text" class="form-control" id="department_name" name="department_name" value="{{ department.name }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="division_id" class="form-label">Division</label>
-                            <select class="form-select" id="division_id" name="division_id" required>
-                                {% for division in divisions %}
-                                    <option value="{{ division.id }}" {% if division.id == department.division_id %}selected{% endif %}>
-                                        {{ division.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-dark w-100">Update Department</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="text-center mt-3">
-                <a href="/department" class="btn btn-secondary">Back to Department List</a>
-            </div>
-        </div>
+{% block form_body %}
+<form method="POST">
+    <div class="mb-3">
+        <label for="department_name" class="form-label">Department Name</label>
+        <input type="text" class="form-control" id="department_name" name="department_name" value="{{ department.name }}"  autocomplete="off" required>
     </div>
-</div>
+    <div class="mb-3">
+        <label for="division_id" class="form-label">Division</label>
+        <select class="form-select" id="division_id" name="division_id" required>
+            {% for division in divisions %}
+                <option value="{{ division.id }}" {% if division.id == department.division_id %}selected{% endif %}>
+                    {{ division.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-dark w-100">Update Department</button>
+</form>
 {% endblock %}
+
+{% block item_list %}department{% endblock %}

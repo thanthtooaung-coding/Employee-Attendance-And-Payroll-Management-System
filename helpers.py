@@ -1,7 +1,10 @@
-import requests
+import random, string
+import smtplib
 
-from flask import redirect, render_template, session
+from flask import redirect, render_template, session, current_app
 from functools import wraps
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 
 def apology(message, code=400, title=""):
@@ -43,3 +46,48 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def generate_readable_password(length=8):
+    """Generate a random user-readable password."""
+
+    characters = string.ascii_letters + string.digits  # e.g., 'abcABC123'
+    
+    # Generate a password by randomly choosing characters
+    password = ''.join(random.choice(characters) for _ in range(length))
+    
+    return password
+
+
+def send_email(recipient_email, password):
+    """Send an email with the generated password to the user."""
+    
+    # Sender email configuration
+    sender_email = current_app.config['MAIL_USERNAME']
+    sender_password = current_app.config['MAIL_PASSWORD']
+    subject = "Your Account Password"
+    body = f"Hello,\n\nYour generated password is: {password}\n\nBest regards,\nVinnTrack"
+
+    # Create the email
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+    msg['Subject'] = subject
+
+    # Attach the email body
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Connect to the SMTP server and send the email
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+            print("Email sent successfully.")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+def usd(value):
+    """Format value as USD."""
+    
+    return f"${value:,.2f}"

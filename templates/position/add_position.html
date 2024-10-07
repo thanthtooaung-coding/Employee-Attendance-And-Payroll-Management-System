@@ -1,0 +1,19 @@
+{% extends "form_layout.html" %}
+
+{% block form_title %}Add New Position{% endblock %}
+
+{% block form_body %}
+<form method="POST">
+    <div class="mb-3">
+        <label for="position_name" class="form-label">Position Name</label>
+        <input type="text" class="form-control" id="position_name" name="position_name" autofocus autocomplete="off" required>
+    </div>
+    <div class="mb-3">
+        <label for="salary" class="form-label">Salary</label>
+        <input type="number" class="form-control" id="salary" name="salary" autocomplete="off" min="1" required>
+    </div>
+    <button type="submit" class="btn btn-dark w-100">Add Position</button>
+</form>
+{% endblock %}
+
+{% block item_list %}position{% endblock %}

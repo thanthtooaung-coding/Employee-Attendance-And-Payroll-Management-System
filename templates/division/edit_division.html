@@ -1,38 +1,15 @@
-{% extends "layout.html" %}
+{% extends "form_layout.html" %}
 
-{% block main %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4">Edit Division</h1>
+{% block form_title %}Edit Division{% endblock %}
 
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="division_name" class="form-label">Division Name</label>
-                            <input type="text" class="form-control" id="division_name" name="division_name" value="{{ division.name }}" required>
-                        </div>
-                        <button type="submit" class="btn btn-dark w-100">Update Division</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="text-center mt-3">
-                <a href="/division" class="btn btn-secondary">Back to Division List</a>
-            </div>
-        </div>
+{% block form_body %}
+<form method="POST">
+    <div class="mb-3">
+        <label for="division_name" class="form-label">Division Name</label>
+        <input type="text" class="form-control" id="division_name" name="division_name" value="{{ division.name }}" autocomplete="off" required>
     </div>
-</div>
+    <button type="submit" class="btn btn-dark w-100">Update Division</button>
+</form>
 {% endblock %}
+
+{% block item_list %}division{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "form_layout.html" %}
+
+{% block form_title %}Edit Role{% endblock %}
+
+{% block form_body %}
+<form method="POST">
+    <div class="mb-3">
+        <label for="role_name" class="form-label">Role Name</label>
+        <input type="text" class="form-control" id="role_name" name="role_name" value="{{ role.title }}" autocomplete="off" required>
+    </div>
+    <button type="submit" class="btn btn-dark w-100">Update Role</button>
+</form>
+{% endblock %}
+
+{% block item_list %}role{% endblock %}

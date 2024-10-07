@@ -1,0 +1,52 @@
+{% extends "form_layout.html" %}
+
+{% block form_title %}Add New Employee{% endblock %}
+
+{% block form_body %}
+<form method="POST">
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" autofocus autocomplete="off" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" autocomplete="off" required>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" autocomplete="off" required>
+    </div>
+    <div class="mb-3">
+        <label for="team_id" class="form-label">Team</label>
+        <select class="form-select" id="team_id" name="team_id" required>
+            <option value="" selected disabled>Select a Team</option>
+            {% for team in teams %}
+                <option value="{{ team.id }}">{{ team.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="role_id" class="form-label">Position</label>
+        <select class="form-select" id="position_id" name="position_id" required>
+            <option value="" selected disabled>Select a Position</option>
+            {% for position in positions %}
+                <option value="{{ position.id }}">{{ position.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="role_id" class="form-label">Role</label>
+        <select class="form-select" id="role_id" name="role_id" required>
+            <option value="" selected disabled>Select a Role</option>
+            {% for role in roles %}
+                <option value="{{ role.id }}">{{ role.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-dark w-100">Add Employee</button>
+</form>
+{% endblock %}
+
+{% block item_list %}employee{% endblock %}

@@ -1,6 +1,258 @@
 {% extends "layout.html" %}
 
-
 {% block main %}
-    Hello, Bro
+<div class="container-fluid py-4">
+    <h1 class="h3 mb-4">Dashboard</h1>
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Divisions</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="width: 18px; height: 18px; color: #64748b;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">{{ division_count }}</h2>
+                    <small class="text-muted">+{{ division_change }} from last month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Departments</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="width: 18px; height: 18px; color: #64748b;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">{{ department_count }}</h2>
+                    <small class="text-muted">+{{ department_change }} from last month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Teams</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="width: 18px; height: 18px; color: #64748b;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">{{ team_count }}</h2>
+                    <small class="text-muted">+{{ team_change }} from last month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Employees</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" style="width: 18px; height: 18px; color: #64748b;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">{{ employee_count }}</h2>
+                    <small class="text-muted">+{{ employee_change }} from last month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">       
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Present Today</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 18px; color: #64748b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                            <path d="M9 16l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">0</h2>
+                    <small class="text-muted">95.6% attendance rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Leave Today</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted">
+                            <path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.342a2 2 0 0 0-.602-1.43l-4.44-4.342A2 2 0 0 0 13.56 2H6a2 2 0 0 0-2 2z"/>
+                            <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                            <path d="M8 13h2"/>
+                            <path d="M8 17h2"/>
+                            <path d="M14 13h2"/>
+                            <path d="M14 17h2"/>
+                            <path d="M9 9l6 6"/>
+                            <path d="M15 9l-6 6"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">0</h2>
+                    <small class="text-muted">4.4% leave rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Payroll</h6>
+                        <i class="bi bi-currency-dollar text-muted"></i>
+                    </div>
+                    <h2 class="card-title mb-0">{{ total_salary | usd }}</h2>
+                    <small class="text-muted">For current month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Overtime Hours</h6>
+                        <i class="bi bi-clock text-muted"></i>
+                    </div>
+                    <h2 class="card-title mb-0">256</h2>
+                    <small class="text-muted">This week</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Weekly Attendance</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Overview of employee attendance for the past week</h6>
+                    <div class="chart-container">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Payroll Trend</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Monthly payroll totals for the past 6 months</h6>
+                    <div class="chart-container">
+                        <canvas id="payrollChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4" style="margin-bottom: 50px;">
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Leave Requests</h5>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for request in recent_leave_requests %}
+                            <li class="list-group-item">{{ request.name }} - {{ request.type }} ({{ request.duration }})</li>
+                        {% endfor %}
+                    </ul>
+                    <button class="btn btn-outline-primary w-100">
+                        View All Requests <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming Payroll</h5>
+                    <p class="fw-bold">Next payroll date: June 30, 2024</p>
+                    <p>Estimated total: {{ estimated_salary | usd }}</p>
+                    <button class="btn btn-outline-primary w-100 mt-3">
+                        Payroll Details <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary">Add New Employee</button>
+                        <button class="btn btn-outline-primary">Generate Payroll Report</button>
+                        <button class="btn btn-outline-primary">View Attendance Log</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Attendance, Leave and Payroll Data from Flask
+    var attendanceData = {{ attendance_data | tojson }};
+    var leaveData = {{ leave_data | tojson }};
+    var payrollData = {{ payroll_data | tojson }}
+
+    // Attendance Chart
+    var attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    var attendanceChart = new Chart(attendanceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Present',
+                data: attendanceData,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)'
+            }, {
+                label: 'Absent',
+                data: leaveData,
+                backgroundColor: 'rgba(255, 99, 132, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Payroll Chart
+    var payrollCtx = document.getElementById('payrollChart').getContext('2d');
+    var payrollChart = new Chart(payrollCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Total Payroll',
+                data: payrollData,
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
