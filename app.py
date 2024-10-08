@@ -11,6 +11,7 @@ from config import Config
 from helpers import apology, login_required, generate_readable_password, send_email, usd
 
 from math import ceil
+from datetime import date, timedelta
 
 
 # Configure application
@@ -147,15 +148,90 @@ def index():
     department_change = department_count - department_count_last_month
     team_change = team_count - team_count_last_month
     employee_change = employee_count - employee_count_last_month
-    total_salary=85000
+
+    today = date.today()
+
+    leave_count = db.execute("""
+        SELECT COUNT(DISTINCT employee_id) as count 
+        FROM leave_request 
+        WHERE ? BETWEEN start_date AND end_date 
+        AND status = 'Approved'
+    """, today)[0]['count']
+
+    total_employees = db.execute("SELECT COUNT(*) as count FROM employee")[0]['count']
+
+    present_count = total_employees - leave_count
+
+    pending_count = db.execute("""
+        SELECT COUNT(DISTINCT employee_id) as count 
+        FROM leave_request 
+        WHERE ? BETWEEN start_date AND end_date 
+        AND status = 'Pending'
+    """, today)[0]['count']
+
+    total_employees = present_count + leave_count + pending_count
+    present_rate = (present_count / total_employees) * 100 if total_employees > 0 else 0
+    leave_rate = (leave_count / total_employees) * 100 if total_employees > 0 else 0
+    pending_rate = (pending_count / total_employees) * 100 if total_employees > 0 else 0
+    
+    first_day_of_month = date.today().replace(day=1)
+    last_day_of_month = (date.today().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+    total_salary = db.execute("""
+        WITH vacation_days AS (
+            SELECT employee_id, 
+                   SUM(JULIANDAY(MIN(?, end_date)) - JULIANDAY(MAX(?, start_date)) + 1) as vacation_days
+            FROM leave_request
+            WHERE leave_type = 'Vacation' 
+              AND status = 'Approved'
+              AND start_date <= ?
+              AND end_date >= ?
+            GROUP BY employee_id
+        )
+        SELECT COALESCE(SUM(
+            p.salary * (1 - COALESCE(v.vacation_days, 0) * 0.001)
+        ), 0) as total_salary
+        FROM employee e
+        JOIN position p ON e.position_id = p.id
+        LEFT JOIN vacation_days v ON e.id = v.employee_id
+    """, last_day_of_month, first_day_of_month, last_day_of_month, first_day_of_month)[0]['total_salary']
+
     attendance_data = [120, 115, 118, 110, 105, 95, 90]
     leave_data = [10, 15, 12, 20, 25, 35, 40]
     payroll_data = [65000, 59000, 80000, 81000, 56000, 85000]
-    recent_leave_requests = [
-        {"name": "John Doe", "type": "Vacation", "duration": "3 days"},
-        {"name": "Jane Smith", "type": "Sick Leave", "duration": "1 day"},  
-    ]
-    estimated_salary=87500    
+    recent_leave_requests = db.execute("""
+        SELECT e.first_name || ' ' || e.last_name as name, 
+               lr.leave_type as type, 
+               (JULIANDAY(lr.end_date) - JULIANDAY(lr.start_date) + 1) as duration
+        FROM leave_request lr
+        JOIN employee e ON lr.employee_id = e.id
+        ORDER BY lr.created_at DESC
+        LIMIT 2
+    """)
+
+    first_day_of_next_month = (date.today().replace(day=1) + timedelta(days=32)).replace(day=1)
+    last_day_of_next_month = (first_day_of_next_month + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+    next_payroll_date = last_day_of_next_month.strftime("%B %d, %Y")
+
+    estimated_salary = db.execute("""
+        WITH vacation_days AS (
+            SELECT employee_id, 
+                   SUM(JULIANDAY(MIN(?, end_date)) - JULIANDAY(MAX(?, start_date)) + 1) as vacation_days
+            FROM leave_request
+            WHERE leave_type = 'Vacation' 
+              AND status = 'Approved'
+              AND start_date <= ?
+              AND end_date >= ?
+            GROUP BY employee_id
+        )
+        SELECT COALESCE(SUM(
+            p.salary * (1 - COALESCE(v.vacation_days, 0) * 0.001)
+        ), 0) as estimated_salary
+        FROM employee e
+        JOIN position p ON e.position_id = p.id
+        LEFT JOIN vacation_days v ON e.id = v.employee_id
+    """, last_day_of_next_month, first_day_of_next_month, last_day_of_next_month, first_day_of_next_month)[0]['estimated_salary']
     
     return render_template("index.html", 
                            title="Dashboard",
@@ -167,11 +243,18 @@ def index():
                            department_change=department_change,
                            team_change=team_change,
                            employee_change=employee_change,
+                           present_count=present_count,
+                           present_rate=present_rate,
+                           leave_count=leave_count,
+                           leave_rate=leave_rate,
+                           pending_count=pending_count,
+                           pending_rate=pending_rate,
                            total_salary=total_salary,
                            attendance_data=attendance_data,
                            leave_data=leave_data,
                            payroll_data=payroll_data,
                            recent_leave_requests=recent_leave_requests,
+                           next_payroll_date=next_payroll_date,
                            estimated_salary=estimated_salary)
 
 
@@ -754,6 +837,7 @@ def edit_employee(employee_id):
         new_email = request.form.get("email")
         new_team_id = request.form.get("team_id")
         new_role_id = request.form.get("role_id")
+        new_position_id = request.form.get("position_id")
 
         # Input validation
         if not new_first_name or not new_last_name:
@@ -775,6 +859,12 @@ def edit_employee(employee_id):
         if not existing_team:
             flash("Selected team does not exist.", "danger")
             return redirect(url_for("edit_employee", employee_id=employee_id))
+        
+        # Check if the position exists
+        existing_position = db.execute("SELECT * FROM position WHERE id = ?", new_position_id)
+        if not existing_position:
+            flash("Selected position does not exist.", "danger")
+            return redirect(url_for("edit_employee", employee_id=employee_id))
 
         # Check if the role exists
         existing_role = db.execute("SELECT * FROM role WHERE id = ?", new_role_id)
@@ -791,9 +881,9 @@ def edit_employee(employee_id):
         # Update the employee
         db.execute("""
             UPDATE employee
-            SET first_name = ?, last_name = ?, email = ?, team_id = ?, role_id = ?
+            SET first_name = ?, last_name = ?, email = ?, team_id = ?, position_id = ?, role_id = ?
             WHERE id = ?
-        """, new_first_name, new_last_name, new_email, new_team_id, new_role_id, employee_id)
+        """, new_first_name, new_last_name, new_email, new_team_id, new_position_id, new_role_id, employee_id)
 
         flash("Employee updated successfully.", "success")
         return redirect("/employee")
@@ -801,11 +891,13 @@ def edit_employee(employee_id):
     # Fetch teams and roles to populate the dropdowns
     teams = db.execute("SELECT id, name FROM team ORDER BY name")
     roles = db.execute("SELECT id, title FROM role ORDER BY title")
+    positions = db.execute("SELECT id, name FROM position ORDER BY name")
 
     return render_template("employee/edit_employee.html", 
                            title="Edit Employee", 
                            employee=employee, 
-                           teams=teams, 
+                           teams=teams,
+                           positions=positions,
                            roles=roles)
 
 
@@ -1090,10 +1182,113 @@ def delete_role(role_id):
 
 
 @app.route("/leave")
-# @login_required
+@login_required
 def leave():
-    # return render_template("leave.html", title="Leave")
-    return apology("TODO")
+    """Leave List with Pagination"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 5  # Number of items per page
+
+    total_leaves = db.execute("SELECT COUNT(*) as count FROM leave_request")[0]['count']
+    total_pages = ceil(total_leaves / per_page)
+
+    offset = (page - 1) * per_page
+    leaves = db.execute("""
+        SELECT 
+            lr.id, 
+            e.first_name || ' ' || e.last_name AS employee_name,
+            lr.start_date,
+            lr.end_date,
+            lr.leave_type,
+            lr.status
+        FROM leave_request lr
+        JOIN employee e ON lr.employee_id = e.id
+        ORDER BY lr.start_date DESC
+        LIMIT ? OFFSET ?
+    """, per_page, offset)
+
+    return render_template("leave/leave.html", 
+                           title="Leave Requests", 
+                           items=leaves,
+                           page=page,
+                           per_page=per_page,
+                           total_pages=total_pages,
+                           current_page='leave',
+                           add_new_url='add_leave',
+                           edit_url='edit_leave',
+                           delete_url='delete_leave')
+
+@app.route("/leave/new", methods=["GET", "POST"])
+@login_required
+def add_leave():
+    """Add new leave request"""
+    if request.method == "POST":
+        employee_id = request.form.get("employee_id")
+        start_date = request.form.get("start_date")
+        end_date = request.form.get("end_date")
+        leave_type = request.form.get("leave_type")
+        reason = request.form.get("reason")
+
+        if not all([employee_id, start_date, end_date, leave_type, reason]):
+            flash("All fields are required.", "danger")
+            return redirect(url_for("add_leave"))
+
+        db.execute("""
+            INSERT INTO leave_request (employee_id, start_date, end_date, leave_type, reason, status)
+            VALUES (?, ?, ?, ?, ?, 'Pending')
+        """, employee_id, start_date, end_date, leave_type, reason)
+
+        flash("Leave request submitted successfully.", "success")
+        return redirect("/leave")
+
+    employees = db.execute("SELECT id, first_name || ' ' || last_name AS name FROM employee ORDER BY name")
+    return render_template("leave/add_leave.html", title="Submit Leave Request", employees=employees)
+
+@app.route("/leave/edit/<int:leave_id>", methods=["GET", "POST"])
+@login_required
+def edit_leave(leave_id):
+    """Edit leave request"""
+    leave = db.execute("SELECT * FROM leave_request WHERE id = ?", leave_id)
+    
+    if not leave:
+        flash("Leave request not found.", "danger")
+        return redirect("/leave")
+
+    if request.method == "POST":
+        start_date = request.form.get("start_date")
+        end_date = request.form.get("end_date")
+        leave_type = request.form.get("leave_type")
+        reason = request.form.get("reason")
+        status = request.form.get("status")
+
+        if not all([start_date, end_date, leave_type, reason, status]):
+            flash("All fields are required.", "danger")
+            return redirect(url_for("edit_leave", leave_id=leave_id))
+
+        db.execute("""
+            UPDATE leave_request
+            SET start_date = ?, end_date = ?, leave_type = ?, reason = ?, status = ?
+            WHERE id = ?
+        """, start_date, end_date, leave_type, reason, status, leave_id)
+
+        flash("Leave request updated successfully.", "success")
+        return redirect("/leave")
+
+    employees = db.execute("SELECT id, first_name || ' ' || last_name AS name FROM employee ORDER BY name")
+    return render_template("leave/edit_leave.html", title="Edit Leave Request", leave=leave[0], employees=employees)
+
+@app.route("/leave/delete/<int:leave_id>", methods=["POST"])
+@login_required
+def delete_leave(leave_id):
+    """Delete leave request"""
+    leave = db.execute("SELECT * FROM leave_request WHERE id = ?", leave_id)
+    
+    if not leave:
+        flash("Leave request not found.", "danger")
+        return redirect("/leave")
+
+    db.execute("DELETE FROM leave_request WHERE id = ?", leave_id)
+    flash("Leave request deleted successfully.", "success")
+    return redirect("/leave")
 
 
 @app.route("/profile")

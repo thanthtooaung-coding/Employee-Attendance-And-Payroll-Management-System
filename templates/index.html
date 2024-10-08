@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "layouts/layout.html" %}
 
 {% block main %}
 <div class="container-fluid py-4">
@@ -76,8 +76,8 @@
                             <path d="M9 16l2 2 4-4"></path>
                         </svg>
                     </div>
-                    <h2 class="card-title mb-0">0</h2>
-                    <small class="text-muted">95.6% attendance rate</small>
+                    <h2 class="card-title mb-0">{{ present_count }}</h2>
+                    <small class="text-muted">{{ "%.1f"|format(present_rate) }}% attendance rate</small>
                 </div>
             </div>
         </div>
@@ -97,8 +97,23 @@
                             <path d="M15 9l-6 6"/>
                         </svg>
                     </div>
-                    <h2 class="card-title mb-0">0</h2>
-                    <small class="text-muted">4.4% leave rate</small>
+                    <h2 class="card-title mb-0">{{ leave_count }}</h2>
+                    <small class="text-muted">{{ "%.1f"|format(leave_rate) }}% leave rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Pending Today</h6>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <h2 class="card-title mb-0">{{ pending_count }}</h2>
+                    <small class="text-muted">{{ "%.1f"|format(pending_rate) }}% pending rate</small>
                 </div>
             </div>
         </div>
@@ -113,19 +128,7 @@
                     <small class="text-muted">For current month</small>
                 </div>
             </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-subtitle text-muted">Overtime Hours</h6>
-                        <i class="bi bi-clock text-muted"></i>
-                    </div>
-                    <h2 class="card-title mb-0">256</h2>
-                    <small class="text-muted">This week</small>
-                </div>
-            </div>
-        </div>
+        </div>  
     </div>
 
     <div class="row g-4 mb-4">
@@ -163,7 +166,7 @@
                             <li class="list-group-item">{{ request.name }} - {{ request.type }} ({{ request.duration }})</li>
                         {% endfor %}
                     </ul>
-                    <button class="btn btn-outline-primary w-100">
+                    <button class="btn btn-outline-primary w-100" onclick="window.location.href='/leave'">
                         View All Requests <i class="bi bi-arrow-right ms-2"></i>
                     </button>
                 </div>
@@ -173,9 +176,9 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Upcoming Payroll</h5>
-                    <p class="fw-bold">Next payroll date: June 30, 2024</p>
+                    <p class="fw-bold">Next payroll date: {{ next_payroll_date }}</p>
                     <p>Estimated total: {{ estimated_salary | usd }}</p>
-                    <button class="btn btn-outline-primary w-100 mt-3">
+                    <button class="btn btn-outline-primary w-100 mt-3" onclick="window.location.href='/payroll_details'">
                         Payroll Details <i class="bi bi-arrow-right ms-2"></i>
                     </button>
                 </div>
@@ -186,7 +189,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Quick Actions</h5>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary">Add New Employee</button>
+                        <button class="btn btn-primary" onclick="window.location.href='/employee/new'">Add New Employee</button>
                         <button class="btn btn-outline-primary">Generate Payroll Report</button>
                         <button class="btn btn-outline-primary">View Attendance Log</button>
                     </div>

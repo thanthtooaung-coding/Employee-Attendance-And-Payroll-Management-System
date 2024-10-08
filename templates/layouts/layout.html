@@ -91,7 +91,7 @@
                     <a href="/role" class="nav-link {% if request.path.startswith('/role') %}active{% endif %}">Role</a>
                 </li>
                 <li>
-                    <a href="/leave" class="nav-link {% if request.path == '/leave' %}active{% endif %}">Leave</a>
+                    <a href="/leave" class="nav-link {% if request.path.startswith('/leave') %}active{% endif %}">Leave</a>
                 </li>
             </ul>
             <hr style="z-index: 1;">

@@ -1,0 +1,42 @@
+{% extends "layouts/form_layout.html" %}
+
+{% block form_title %}Submit Leave Request{% endblock %}
+
+{% block form_body %}
+<form method="POST">
+    <div class="mb-3">
+        <label for="employee_id" class="form-label">Employee</label>
+        <select class="form-select" id="employee_id" name="employee_id" required>
+            <option value="" selected disabled>Select an Employee</option>
+            {% for employee in employees %}
+                <option value="{{ employee.id }}">{{ employee.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="start_date" class="form-label">Start Date</label>
+        <input type="date" class="form-control" id="start_date" name="start_date" required>
+    </div>
+    <div class="mb-3">
+        <label for="end_date" class="form-label">End Date</label>
+        <input type="date" class="form-control" id="end_date" name="end_date" required>
+    </div>
+    <div class="mb-3">
+        <label for="leave_type" class="form-label">Leave Type</label>
+        <select class="form-select" id="leave_type" name="leave_type" required>
+            <option value="" selected disabled>Select Leave Type</option>
+            <option value="Vacation">Vacation</option>
+            <option value="Sick">Sick</option>
+            <option value="Personal">Personal</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="reason" class="form-label">Reason</label>
+        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-dark w-100">Submit Leave Request</button>
+</form>
+{% endblock %}
+
+{% block item_list %}leave{% endblock %}

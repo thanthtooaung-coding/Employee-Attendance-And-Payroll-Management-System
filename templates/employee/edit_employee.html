@@ -1,4 +1,4 @@
-{% extends "form_layout.html" %}
+{% extends "layouts/form_layout.html" %}
 
 {% block form_title %}Edit Employee{% endblock %}
 
@@ -23,6 +23,14 @@
         <select class="form-select" id="team_id" name="team_id" required>
             {% for team in teams %}
                 <option value="{{ team.id }}" {% if team.id == employee.team_id %}selected{% endif %}>{{ team.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="position_id" class="form-label">Position</label>
+        <select class="form-select" id="position_id" name="position_id" required>
+            {% for position in positions %}
+                <option value="{{ position.id }}" {% if position.id == employee.position_id %}selected{% endif %}>{{ position.name }}</option>
             {% endfor %}
         </select>
     </div>

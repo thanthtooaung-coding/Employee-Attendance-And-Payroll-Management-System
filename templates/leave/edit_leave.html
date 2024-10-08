@@ -1,0 +1,48 @@
+{% extends "layouts/form_layout.html" %}
+
+{% block form_title %}Edit Leave Request{% endblock %}
+
+{% block form_body %}
+<form method="POST">
+    <div class="mb-3">
+        <label for="employee_id" class="form-label">Employee</label>
+        <select class="form-select" id="employee_id" name="employee_id" required disabled>
+            {% for employee in employees %}
+                <option value="{{ employee.id }}" {% if employee.id == leave.employee_id %}selected{% endif %}>{{ employee.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="start_date" class="form-label">Start Date</label>
+        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ leave.start_date }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="end_date" class="form-label">End Date</label>
+        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ leave.end_date }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="leave_type" class="form-label">Leave Type</label>
+        <select class="form-select" id="leave_type" name="leave_type" required>
+            <option value="Vacation" {% if leave.leave_type == 'Vacation' %}selected{% endif %}>Vacation</option>
+            <option value="Sick" {% if leave.leave_type == 'Sick' %}selected{% endif %}>Sick</option>
+            <option value="Personal" {% if leave.leave_type == 'Personal' %}selected{% endif %}>Personal</option>
+            <option value="Other" {% if leave.leave_type == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="reason" class="form-label">Reason</label>
+        <textarea class="form-control" id="reason" name="reason" rows="3" required>{{ leave.reason }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status" required>
+            <option value="Pending" {% if leave.status == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="Approved" {% if leave.status == 'Approved' %}selected{% endif %}>Approved</option>
+            <option value="Rejected" {% if leave.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-dark w-100">Update Leave Request</button>
+</form>
+{% endblock %}
+
+{% block item_list %}leave{% endblock %}
