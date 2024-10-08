@@ -1,0 +1,25 @@
+{% extends "layouts/table_layout.html" %}
+
+{% block table_headers %}
+    <th scope="col">Employee Name</th>
+    <th scope="col">Position</th>
+    <th scope="col">Base Salary</th>
+    <th scope="col">Deductions</th>
+    <th scope="col">Final Salary</th>    
+{% endblock %}
+
+{% block table_rows %}
+    {% for payroll in items %}
+    <tr>
+        <th scope="row">{{ loop.index + (page - 1) * per_page }}</th>
+        <td>{{ payroll.employee_name }}</td>
+        <td>{{ payroll.position }}</td>
+        <td>{{ payroll.base_salary | usd }}</td>
+        <td>{{ payroll.deductions | usd }}</td>
+        <td>{{ payroll.final_salary | usd }}</td>        
+    </tr>
+    {% endfor %}
+    <div class="mb-3">
+        <h4>Total Estimated Payroll: {{ total_payroll | usd }}</h4>
+    </div>
+{% endblock %}

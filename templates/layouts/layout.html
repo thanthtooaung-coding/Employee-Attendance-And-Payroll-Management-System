@@ -98,7 +98,7 @@
             <div class="dropdown" style="z-index: 4;">
                 <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
                     <img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Lisa_-_Moonlit_Floor.png" alt="" width="32" height="32" class="rounded-circle me-2">
-                    <strong>Thant Htoo Aung</strong>
+                    <strong>{{ session['user_name'] }}</strong>
                 </a>
                 <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">                
                     <li><a class="dropdown-item" href="/settings">Settings</a></li>
@@ -133,8 +133,8 @@
                     <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Lisa_-_Moonlit_Floor.png" alt="" width="40" height="40" class="rounded-circle me-2">
                         <div class="d-flex flex-column">
-                            <strong>Thant Htoo Aung</strong>
-                            <p class="mb-0" style="font-size: 0.85rem; color: gray;">Admin</p>
+                            <strong>{{ session['user_name'] }}</strong>
+                            <p class="mb-0" style="font-size: 0.85rem; color: gray;">{{ session['user_role'] }}</p>
                         </div>
                     </a>
                     <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser">                        

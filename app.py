@@ -102,7 +102,16 @@ def login():
             flash("Invalid email and/or password. Please try again.", "danger")
             return render_template("login.html", title="Login")
 
+        user = rows[0]
         session["user_id"] = rows[0]["id"]
+
+        # Fetch role title
+        role_row = db.execute("SELECT title FROM role WHERE id = ?", user["role_id"])
+        role_title = role_row[0]["title"] if role_row else "Unknown Role"
+
+        # Store user's name and role in session for later use
+        session["user_name"] = f"{user['first_name']} {user['last_name']}"
+        session["user_role"] = role_title
 
         # Redirect user to home page
         return redirect("/")
@@ -1185,6 +1194,7 @@ def delete_role(role_id):
 @login_required
 def leave():
     """Leave List with Pagination"""
+
     page = request.args.get('page', 1, type=int)
     per_page = 5  # Number of items per page
 
@@ -1289,6 +1299,108 @@ def delete_leave(leave_id):
     db.execute("DELETE FROM leave_request WHERE id = ?", leave_id)
     flash("Leave request deleted successfully.", "success")
     return redirect("/leave")
+
+
+@app.route("/payroll_details")
+@login_required
+def payroll_details():
+    """Show detailed payroll information for the next payroll cycle."""
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 5  # Number of items per page
+
+    total_payrolls = db.execute("SELECT COUNT(*) as count FROM employee")[0]['count']
+    
+    total_pages = ceil(total_payrolls / per_page)
+    offset = (page - 1) * per_page
+
+    first_day_of_next_month = (date.today().replace(day=1) + timedelta(days=32)).replace(day=1)
+    last_day_of_next_month = (first_day_of_next_month + timedelta(days=32)).replace(day=1) - timedelta(days=1)       
+    
+    payroll_details = db.execute("""
+        WITH vacation_days AS (
+            SELECT employee_id, 
+                   SUM(JULIANDAY(MIN(?, end_date)) - JULIANDAY(MAX(?, start_date)) + 1) as vacation_days
+            FROM leave_request
+            WHERE leave_type = 'Vacation' 
+              AND status = 'Approved'
+              AND start_date <= ?
+              AND end_date >= ?
+            GROUP BY employee_id
+        )
+        SELECT e.first_name || ' ' || e.last_name as employee_name, 
+               p.name as position, 
+               p.salary as base_salary, 
+               COALESCE(v.vacation_days, 0) * 0.001 * p.salary as deductions,
+               p.salary * (1 - COALESCE(v.vacation_days, 0) * 0.001) as final_salary
+        FROM employee e
+        JOIN position p ON e.position_id = p.id
+        LEFT JOIN vacation_days v ON e.id = v.employee_id
+        LIMIT ? OFFSET ?
+    """, last_day_of_next_month, first_day_of_next_month, last_day_of_next_month, first_day_of_next_month, per_page, offset)
+
+    # Calculate total payroll
+    total_payroll = sum([payroll['final_salary'] for payroll in payroll_details])
+
+    # Format next payroll date
+    next_payroll_date = last_day_of_next_month.strftime("%B %d, %Y")
+
+    return render_template("others/payroll_details.html",
+                           title="Payroll Details", 
+                           items=payroll_details, 
+                           page=page,
+                           per_page=per_page,
+                           total_pages=total_pages,
+                           current_page='payroll_details',
+                           total_payroll=total_payroll, 
+                           next_payroll_date=next_payroll_date,
+                           add_new_url='download_payroll',
+                           edit_url='download_payroll',
+                           delete_url='download_payroll')
+
+
+@app.route("/download_payroll")
+@login_required
+def download_payroll():
+    """Download payroll details as an Excel file."""
+
+    first_day_of_next_month = (date.today().replace(day=1) + timedelta(days=32)).replace(day=1)
+    last_day_of_next_month = (first_day_of_next_month + timedelta(days=32)).replace(day=1) - timedelta(days=1)  
+    
+    payroll_details = db.execute("""
+        WITH vacation_days AS (
+            SELECT employee_id, 
+                   SUM(JULIANDAY(MIN(?, end_date)) - JULIANDAY(MAX(?, start_date)) + 1) as vacation_days
+            FROM leave_request
+            WHERE leave_type = 'Vacation' 
+              AND status = 'Approved'
+              AND start_date <= ?
+              AND end_date >= ?
+            GROUP BY employee_id
+        )
+        SELECT e.first_name || ' ' || e.last_name as employee_name, 
+               p.name as position, 
+               p.salary as base_salary, 
+               COALESCE(v.vacation_days, 0) * 0.001 * p.salary as deductions,
+               p.salary * (1 - COALESCE(v.vacation_days, 0) * 0.001) as final_salary
+        FROM employee e
+        JOIN position p ON e.position_id = p.id
+        LEFT JOIN vacation_days v ON e.id = v.employee_id
+    """, last_day_of_next_month, first_day_of_next_month, last_day_of_next_month, first_day_of_next_month)
+
+    import pandas as pd
+    from io import BytesIO
+    from flask import send_file
+
+    df = pd.DataFrame(payroll_details)
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Payroll Details')
+
+    output.seek(0)
+    
+    return send_file(output, download_name='payroll_details.xlsx', as_attachment=True)
 
 
 @app.route("/profile")

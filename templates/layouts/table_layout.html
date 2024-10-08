@@ -18,7 +18,7 @@
                 </div>
                 <div class="col-md-4 col-lg-3 text-md-end">
                     <a href="{{ url_for(add_new_url) }}" class="btn btn-dark w-100">
-                        <i class="bi bi-plus-circle me-2"></i>{% if not request.path.startswith('/leave')%}Add{% else %}Submit{% endif %} New {{ title }}
+                        <i class="{% if not request.path.startswith('/payroll_details')%}bi bi-plus-circle{% else %}bi bi-file-earmark-excel-fill{% endif %} me-2"></i>{% if not request.path.startswith('/payroll_details')%}{% if not request.path.startswith('/leave')%}Add{% else %}Submit{% endif %} New {{ title }}{% else %}Export With Excel Format{% endif %}
                     </a>
                 </div>
             </div>
@@ -30,7 +30,7 @@
                             <tr>
                                 <th scope="col">#</th>
                                 {% block table_headers %}{% endblock %}
-                                <th scope="col" class="text-end">Actions</th>
+                                {% if not request.path.startswith('/payroll_details')%}<th scope="col" class="text-end">Actions</th>{% endif %}
                             </tr>
                         </thead>
                         <tbody>                            
