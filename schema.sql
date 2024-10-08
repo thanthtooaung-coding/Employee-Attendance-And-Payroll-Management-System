@@ -57,3 +57,16 @@ CREATE TABLE employee (
     FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE SET NULL,
     FOREIGN KEY (position_id) REFERENCES position(id) ON DELETE SET NULL
 );
+
+CREATE TABLE leave_request (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    employee_id INTEGER NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    leave_type TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE
+);
