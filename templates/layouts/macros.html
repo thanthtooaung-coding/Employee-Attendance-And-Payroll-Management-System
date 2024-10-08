@@ -1,0 +1,23 @@
+{% macro count_card(title, count, change, svg_icon) %}
+    <div class="col-md-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="card-subtitle text-muted">{{ title }}</h6>
+                    {{ svg_icon|safe }}
+                </div>
+                <h2 class="card-title mb-0">{{ count }}</h2>
+                <small class="text-muted text-success"
+                    style="color: {% if change > 0 %} green {% elif change < 0 %} red {% else %} gray {% endif %} !important">
+                    {% if change > 0 %}
+                        +{{ change }} from last month
+                    {% elif change < 0 %}
+                        {{ change }} from last month
+                    {% else %}
+                        No change from last month
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

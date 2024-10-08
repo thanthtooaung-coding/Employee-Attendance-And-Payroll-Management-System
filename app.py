@@ -1,9 +1,11 @@
 import os
 import datetime
 import re
+import io
+import csv
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for, send_file
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -12,6 +14,7 @@ from helpers import apology, login_required, generate_readable_password, send_em
 
 from math import ceil
 from datetime import date, timedelta
+from io import BytesIO
 
 
 # Configure application
@@ -205,9 +208,63 @@ def index():
         LEFT JOIN vacation_days v ON e.id = v.employee_id
     """, last_day_of_month, first_day_of_month, last_day_of_month, first_day_of_month)[0]['total_salary']
 
-    attendance_data = [120, 115, 118, 110, 105, 95, 90]
-    leave_data = [10, 15, 12, 20, 25, 35, 40]
-    payroll_data = [65000, 59000, 80000, 81000, 56000, 85000]
+    from datetime import datetime
+
+    today = datetime.today()
+    days_of_week = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(6, -1, -1)]
+
+    attendance_data = []
+    leave_data = []
+
+    for day in days_of_week:
+        present_count = db.execute("""
+            SELECT COUNT(*) as count
+            FROM employee e
+            WHERE e.id NOT IN (
+                SELECT employee_id
+                FROM leave_request
+                WHERE ? BETWEEN start_date AND end_date
+                AND status = 'Approved'
+            )
+        """, day)[0]['count']
+
+        leave_count = db.execute("""
+            SELECT COUNT(*) as count
+            FROM leave_request
+            WHERE ? BETWEEN start_date AND end_date
+            AND status = 'Approved'
+        """, day)[0]['count']
+
+    attendance_data.append(present_count)
+    leave_data.append(leave_count)
+    
+    payroll_data = []
+    months = [(today.replace(day=1) - timedelta(days=30 * i)).strftime('%Y-%m') for i in range(6, 0, -1)]
+    month_names = [(today.replace(day=1) - timedelta(days=30 * i)).strftime('%B') for i in range(6, 0, -1)] 
+
+    for month in months:
+        total_payroll = db.execute("""
+            WITH vacation_days AS (
+                SELECT employee_id, 
+                    SUM(JULIANDAY(MIN(DATE(?, 'start of month', '+1 month', '-1 day'), end_date)) - 
+                        JULIANDAY(MAX(DATE(?, 'start of month'), start_date)) + 1) as vacation_days
+                FROM leave_request
+                WHERE leave_type = 'Vacation'
+                AND status = 'Approved'
+                AND start_date <= DATE(?, 'start of month', '+1 month', '-1 day')
+                AND end_date >= DATE(?, 'start of month')
+                GROUP BY employee_id
+            )
+            SELECT COALESCE(SUM(
+                p.salary * (1 - COALESCE(v.vacation_days, 0) * 0.001)
+            ), 0) as total_salary
+            FROM employee e
+            JOIN position p ON e.position_id = p.id
+            LEFT JOIN vacation_days v ON e.id = v.employee_id
+        """, month, month, month, month)[0]['total_salary']
+
+        payroll_data.append(total_payroll)
+
     recent_leave_requests = db.execute("""
         SELECT e.first_name || ' ' || e.last_name as name, 
                lr.leave_type as type, 
@@ -264,7 +321,8 @@ def index():
                            payroll_data=payroll_data,
                            recent_leave_requests=recent_leave_requests,
                            next_payroll_date=next_payroll_date,
-                           estimated_salary=estimated_salary)
+                           estimated_salary=estimated_salary,
+                           month_names=month_names)
 
 
 @app.route("/division")
@@ -1388,9 +1446,7 @@ def download_payroll():
         LEFT JOIN vacation_days v ON e.id = v.employee_id
     """, last_day_of_next_month, first_day_of_next_month, last_day_of_next_month, first_day_of_next_month)
 
-    import pandas as pd
-    from io import BytesIO
-    from flask import send_file
+    import pandas as pd    
 
     df = pd.DataFrame(payroll_details)
 
@@ -1400,21 +1456,153 @@ def download_payroll():
 
     output.seek(0)
     
-    return send_file(output, download_name='payroll_details.xlsx', as_attachment=True)
+    return send_file(output, download_name='Payroll Details.xlsx', as_attachment=True)
+
+
+@app.route("/generate_report")
+@login_required
+def generate_report():
+    # Fetch payroll data for the current month
+
+    first_day_of_month = date.today().replace(day=1)
+    last_day_of_month = (date.today().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+    
+    payroll_data = db.execute("""
+        WITH leave_info AS (
+            SELECT 
+                e.id as employee_id,
+                lr.leave_type,
+                SUM(JULIANDAY(MIN(?, lr.end_date)) - JULIANDAY(MAX(?, lr.start_date)) + 1) as leave_days
+            FROM employee e
+            LEFT JOIN leave_request lr ON e.id = lr.employee_id 
+            WHERE lr.status = 'Approved'
+                AND lr.start_date <= ?
+                AND lr.end_date >= ?
+            GROUP BY e.id, lr.leave_type
+        )
+        SELECT 
+            e.id as employee_id,
+            e.first_name || ' ' || e.last_name as employee_name,
+            p.salary,
+            COALESCE(SUM(CASE WHEN li.leave_type = 'Vacation' THEN li.leave_days ELSE 0 END), 0) as vacation_days,
+            COALESCE(SUM(CASE WHEN li.leave_type = 'Sick' THEN li.leave_days ELSE 0 END), 0) as sick_days,
+            COALESCE(SUM(CASE WHEN li.leave_type NOT IN ('Vacation', 'Sick') THEN li.leave_days ELSE 0 END), 0) as other_leave_days,
+            GROUP_CONCAT(DISTINCT li.leave_type) as leave_types
+        FROM employee e
+        JOIN position p ON e.position_id = p.id
+        LEFT JOIN leave_info li ON e.id = li.employee_id
+        GROUP BY e.id
+        ORDER BY e.last_name, e.first_name
+    """, last_day_of_month, first_day_of_month, last_day_of_month, first_day_of_month)
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Employee Name', 'Salary', 'Vacation Days', 'Sick Days', 'Other Leave Days', 'Leave Types'])
+
+    for row in payroll_data:
+        writer.writerow([
+            row['employee_name'],
+            row['salary'],
+            row['vacation_days'],
+            row['sick_days'],
+            row['other_leave_days'],
+            row['leave_types'] or 'None'
+        ])
+    
+    output.seek(0)
+    
+    # Return CSV as downloadable file
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8')),
+        mimetype="text/csv", 
+        as_attachment=True,
+        download_name=f"payroll_report_{date.today().strftime('%Y-%m-%d')}.csv"
+    )
+
+
+@app.route("/generate_attendance_log")
+@login_required
+def generate_attendance_log():
+    """Generate attendance log CSV for the current month"""
+
+    today = date.today()
+    year = today.year
+    month = today.month
+
+    first_day_of_month = today.replace(day=1)
+    last_day_of_month = (first_day_of_month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+    attendance_data = db.execute("""
+        SELECT e.id as employee_id,
+               e.first_name || ' ' || e.last_name as employee_name,
+               e.created_at,
+               e.updated_at,
+               GROUP_CONCAT(lr.start_date || '|' || lr.end_date, ';') AS leave_periods
+        FROM employee e
+        LEFT JOIN leave_request lr 
+        ON e.id = lr.employee_id 
+        AND lr.start_date <= ? 
+        AND lr.end_date >= ?
+        GROUP BY e.id
+        ORDER BY e.last_name, e.first_name
+    """, last_day_of_month, first_day_of_month)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    header = ['#', 'Employee Name', 'Year', 'Month'] + [str(day) for day in range(1, last_day_of_month.day + 1)]
+    writer.writerow(header)
+
+    for index, row in enumerate(attendance_data):
+        attendance_row = [
+            index + 1,
+            row['employee_name'],
+            year,
+            month
+        ]
+
+        attendance_days = ['Present'] * last_day_of_month.day
+
+        if row['leave_periods']:
+            leave_periods = row['leave_periods'].split(';')
+
+            from datetime import datetime
+
+            for period in leave_periods:
+                if period:
+                    start_str, end_str = period.split('|')
+                    start_date = datetime.strptime(start_str, '%Y-%m-%d').date()
+                    end_date = datetime.strptime(end_str, '%Y-%m-%d').date()
+
+                    leave_start = max(start_date.day, 1)
+                    leave_end = min(end_date.day, last_day_of_month.day)
+                    for day in range(leave_start, leave_end + 1):
+                        attendance_days[day - 1] = 'On Leave'
+
+        attendance_row.extend(attendance_days)
+        writer.writerow(attendance_row)
+
+    output.seek(0)
+
+    # Return CSV as downloadable file
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8')),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=f"attendance_log_{year}-{month}.csv"
+    )
 
 
 @app.route("/profile")
 @login_required
 def profile():
-    # return render_template("profile.html", title="Profile")
-    return apology("TODO")
+    return apology("coming soon")
 
 
 @app.route("/settings")
 @login_required
 def settings():
-    # return render_template("settings.html", title="Settings")
-    return apology("TODO")
+    return apology("coming soon")
 
 @app.route("/sign_out")
 def sign_out():
