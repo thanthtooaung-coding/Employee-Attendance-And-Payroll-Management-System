@@ -1,0 +1,92 @@
+{% extends "layouts/layout.html" %}
+
+{% block main %}
+<div class="container mt-4" style="margin-bottom: 70px;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Lisa_-_Moonlit_Floor.png" alt="Profile Picture" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    <h3 class="card-title mb-0">{{ user_data.name }}</h3>
+                    <p class="text-muted">{{ user_data.role }}</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-primary" type="button">Edit Profile</button>
+                        <button class="btn btn-outline-secondary" type="button">Change Password</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Links</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><a href="/leave" class="text-decoration-none">My Leave Requests</a></li>
+                        <li class="list-group-item"><a href="#" class="text-decoration-none">My Attendance</a></li>
+                        <li class="list-group-item"><a href="#" class="text-decoration-none">My Payroll</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Personal Information</h5>
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Employee ID:</th>
+                                <td>{{ user_data.employee_id }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Email:</th>
+                                <td>{{ user_data.email }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Team:</th>
+                                <td>{{ user_data.team }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Department:</th>
+                                <td>{{ user_data.department }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Leave Days:</th>
+                                <td>{{ user_data.leave_days }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Payroll:</th>
+                                <td>{{ user_data.payroll }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Position:</th>
+                                <td>{{ user_data.position }}</td>
+                            </tr>                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Activity</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="bi bi-calendar-check text-success me-2"></i>
+                            Attendance marked for today
+                            <small class="text-muted float-end">2 hours ago</small>
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                            Submitted leave request
+                            <small class="text-muted float-end">2 days ago</small>
+                        </li>
+                        <li class="list-group-item">
+                            <i class="bi bi-currency-dollar text-warning me-2"></i>
+                            Payroll processed
+                            <small class="text-muted float-end">1 week ago</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

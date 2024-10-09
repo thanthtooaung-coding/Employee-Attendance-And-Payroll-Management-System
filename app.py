@@ -112,9 +112,29 @@ def login():
         role_row = db.execute("SELECT title FROM role WHERE id = ?", user["role_id"])
         role_title = role_row[0]["title"] if role_row else "Unknown Role"
 
+        team_row = db.execute("SELECT id, name FROM team WHERE id = ?", user["team_id"])
+
+        if team_row:
+            team_id = team_row[0]["id"]
+            team_name = team_row[0]["name"]
+        else:
+            team_id = "Unknown Team"
+            team_name = "Unknown Team"
+
+        department_row = db.execute("SELECT name FROM department WHERE id = ?", team_id)
+        department_name = department_row[0]["name"] if department_row else "Unknown Department"
+
+        position_row = db.execute("SELECT name FROM position WHERE id = ?", user["position_id"])
+        position_name = position_row[0]["name"] if position_row else "Unknown Position"
+
         # Store user's name and role in session for later use
         session["user_name"] = f"{user['first_name']} {user['last_name']}"
         session["user_role"] = role_title
+        session["user_email"] = user["email"]
+        session["employee_id"] = user["id"]
+        session["team"] = team_name
+        session["department"] = department_name
+        session["position"] = position_name
 
         # Redirect user to home page
         return redirect("/")
@@ -1593,10 +1613,98 @@ def generate_attendance_log():
     )
 
 
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Change password"""
+
+    user_id = session["user_id"]
+
+    if request.method == "POST":
+        # Get the form data
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        if not current_password:
+            return apology("missing current password", 400)
+
+        if not new_password:
+            return apology("missing new password", 400)
+
+        if new_password != confirm_password:
+            return apology("passwords don't match", 400)
+
+        user_data = db.execute("SELECT hash FROM employee WHERE id = ?", user_id)
+        if len(user_data) != 1:
+            return apology("user not found", 404)
+
+        # Check if the current password is correct
+        if not check_password_hash(user_data[0]["hash"], current_password):
+            return apology("current password incorrect", 400)
+
+        new_password_hash = generate_password_hash(new_password)
+
+        # Update the password in the database
+        db.execute("UPDATE employee SET hash = ? WHERE id = ?", new_password_hash, user_id)
+
+        # Flash a success message
+        flash("Password updated successfully")
+
+        # Redirect to the home page
+        return redirect("/sign_out")
+
+    # If method is GET, render the change_password form
+    return render_template("others/change_password.html", title="Change Password")
+
+
 @app.route("/profile")
 @login_required
 def profile():
-    return apology("coming soon")
+    """Profile"""
+    
+    user_data = {
+        "name": session.get('user_name', 'N/A'),
+        "role": session.get('user_role', 'N/A'),
+        "email": session.get('user_email', 'N/A'),
+        "employee_id": session.get('employee_id', 'N/A'),
+        "team": session.get('team', 'N/A'),
+        "department": session.get('department', 'N/A'),
+        "position": session.get('position', 'N/A'),
+    }
+
+    # Fetch leave days for the user
+    leave_days_query = """
+        SELECT COALESCE(SUM(JULIANDAY(MIN(?, end_date)) - JULIANDAY(MAX(?, start_date)) + 1), 0) as leave_days
+        FROM leave_request
+        WHERE employee_id = ? AND status = 'Approved'
+    """
+    first_day_of_month = date.today().replace(day=1)
+    last_day_of_month = (first_day_of_month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    
+    leave_days = db.execute(leave_days_query, last_day_of_month, first_day_of_month, user_data['employee_id'])[0]['leave_days']
+    
+    # Fetch payroll information for the user
+    payroll_query = """
+        WITH vacation_days AS (
+            SELECT employee_id, 
+                   COALESCE(SUM(JULIANDAY(MIN(?, end_date)) - JULIANDAY(MAX(?, start_date)) + 1), 0) as vacation_days
+            FROM leave_request
+            WHERE employee_id = ? AND status = 'Approved'
+        )
+        SELECT p.salary * (1 - COALESCE(v.vacation_days, 0) * 0.001) as payroll
+        FROM employee e
+        JOIN position p ON e.position_id = p.id
+        LEFT JOIN vacation_days v ON e.id = v.employee_id
+        WHERE e.id = ?
+    """
+    
+    payroll = db.execute(payroll_query, last_day_of_month, first_day_of_month, user_data['employee_id'], user_data['employee_id'])[0]['payroll']
+
+    user_data["leave_days"] = leave_days
+    user_data["payroll"] = payroll
+
+    return render_template("others/profile.html", title="Profile", user_data=user_data)
 
 
 @app.route("/settings")
