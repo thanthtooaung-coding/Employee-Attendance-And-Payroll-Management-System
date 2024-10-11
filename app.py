@@ -10,7 +10,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
-from helpers import apology, login_required, generate_readable_password, send_email, usd
+from helpers import apology, login_required, generate_readable_password, role_required, send_email, usd
 
 from math import ceil
 from datetime import date, timedelta
@@ -112,17 +112,19 @@ def login():
         role_row = db.execute("SELECT title FROM role WHERE id = ?", user["role_id"])
         role_title = role_row[0]["title"] if role_row else "Unknown Role"
 
-        team_row = db.execute("SELECT id, name FROM team WHERE id = ?", user["team_id"])
+        team_row = db.execute("SELECT id, name, department_id FROM team WHERE id = ?", user["team_id"])
 
         if team_row:
             team_id = team_row[0]["id"]
             team_name = team_row[0]["name"]
+            department_id = team_row[0]["department_id"]
+
+            department_row = db.execute("SELECT name FROM department WHERE id = ?", department_id)
+            department_name = department_row[0]["name"] if department_row else "Unknown Department"
         else:
             team_id = "Unknown Team"
             team_name = "Unknown Team"
-
-        department_row = db.execute("SELECT name FROM department WHERE id = ?", team_id)
-        department_name = department_row[0]["name"] if department_row else "Unknown Department"
+            department_name = "Unknown Department"
 
         position_row = db.execute("SELECT name FROM position WHERE id = ?", user["position_id"])
         position_name = position_row[0]["name"] if position_row else "Unknown Position"
@@ -136,13 +138,17 @@ def login():
         session["department"] = department_name
         session["position"] = position_name
 
-        # Redirect user to home page
-        return redirect("/")
+        # Redirect user to home page or profile page based on their roles
+        if session.get('user_role') == "Admin":
+            return redirect("/")
+        else:
+            return redirect("/profile")
 
     return render_template("login.html", title="Login")
 
 @app.route("/")
 @login_required
+@role_required(["Admin"])
 def index():
     """Dashboard"""
 
@@ -347,6 +353,7 @@ def index():
 
 @app.route("/division")
 @login_required
+@role_required(["Admin"])
 def division():
     """Division List with Pagination"""
 
@@ -391,6 +398,7 @@ def division():
 
 @app.route("/division/new", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def add_division():
     """Add new division"""
 
@@ -417,6 +425,7 @@ def add_division():
 
 @app.route("/division/edit/<int:division_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def edit_division(division_id):
     """Edit division"""
 
@@ -450,6 +459,7 @@ def edit_division(division_id):
 
 @app.route("/division/delete/<int:division_id>", methods=["POST"])
 @login_required
+@role_required(["Admin"])
 def delete_division(division_id):
     """Delete division"""
 
@@ -474,6 +484,7 @@ def delete_division(division_id):
 
 @app.route("/department")
 @login_required
+@role_required(["Admin"])
 def department():
     """Department List with Pagination"""
 
@@ -516,6 +527,7 @@ def department():
 
 @app.route("/department/new", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def add_department():
     """Add new department"""
 
@@ -554,6 +566,7 @@ def add_department():
 
 @app.route("/department/edit/<int:department_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def edit_department(department_id):
     """Edit department"""
 
@@ -599,6 +612,7 @@ def edit_department(department_id):
 
 @app.route("/department/delete/<int:department_id>", methods=["POST"])
 @login_required
+@role_required(["Admin"])
 def delete_department(department_id):
     """Delete department"""
 
@@ -623,6 +637,7 @@ def delete_department(department_id):
 
 @app.route("/team")
 @login_required
+@role_required(["Admin"])
 def team():
     """Team List with Pagination"""
 
@@ -668,6 +683,7 @@ def team():
 
 @app.route("/team/new", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def add_team():
     """Add new team"""
 
@@ -706,6 +722,7 @@ def add_team():
 
 @app.route("/team/edit/<int:team_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def edit_team(team_id):
     """Edit team"""
 
@@ -751,6 +768,7 @@ def edit_team(team_id):
 
 @app.route("/team/delete/<int:team_id>", methods=["POST"])
 @login_required
+@role_required(["Admin"])
 def delete_team(team_id):
     """Delete team"""
 
@@ -775,6 +793,7 @@ def delete_team(team_id):
 
 @app.route("/employee")
 @login_required
+@role_required(["Admin"])
 def employee():
     """Employee List with Pagination"""
     
@@ -819,6 +838,7 @@ def employee():
 
 @app.route("/employee/new", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def add_employee():
     """Add new employee"""
     
@@ -905,6 +925,7 @@ def add_employee():
 
 @app.route("/employee/edit/<int:employee_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def edit_employee(employee_id):
     """Edit employee"""
 
@@ -990,6 +1011,7 @@ def edit_employee(employee_id):
 
 @app.route("/employee/delete/<int:employee_id>", methods=["POST"])
 @login_required
+@role_required(["Admin"])
 def delete_employee(employee_id):
     """Delete employee"""
 
@@ -1007,6 +1029,7 @@ def delete_employee(employee_id):
 
 @app.route("/position")
 @login_required
+@role_required(["Admin"])
 def position():
     """Position List with Pagination"""
 
@@ -1047,6 +1070,7 @@ def position():
 
 @app.route("/position/new", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def add_position():    
     """Add new position"""
 
@@ -1082,6 +1106,7 @@ def add_position():
 
 @app.route("/position/edit/<int:position_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def edit_position(position_id):
     """Edit position"""
 
@@ -1124,6 +1149,7 @@ def edit_position(position_id):
 
 @app.route("/position/delete/<int:position_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def delete_position(position_id):
     """Delete position"""
 
@@ -1148,6 +1174,7 @@ def delete_position(position_id):
 
 @app.route("/role")
 @login_required
+@role_required(["Admin"])
 def role():
     """Role List with Pagination"""
 
@@ -1187,6 +1214,7 @@ def role():
 
 @app.route("/role/new", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def add_role():    
     """Add new role"""
 
@@ -1213,6 +1241,7 @@ def add_role():
 
 @app.route("/role/edit/<int:role_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def edit_role(role_id):
     """Edit role"""
 
@@ -1246,6 +1275,7 @@ def edit_role(role_id):
 
 @app.route("/role/delete/<int:role_id>", methods=["GET", "POST"])
 @login_required
+@role_required(["Admin"])
 def delete_role(role_id):
     """Delete role"""
 
@@ -1270,6 +1300,7 @@ def delete_role(role_id):
 
 @app.route("/leave")
 @login_required
+@role_required(["Admin"])
 def leave():
     """Leave List with Pagination"""
 
@@ -1305,6 +1336,7 @@ def leave():
                            edit_url='edit_leave',
                            delete_url='delete_leave')
 
+
 @app.route("/leave/new", methods=["GET", "POST"])
 @login_required
 def add_leave():
@@ -1326,10 +1358,13 @@ def add_leave():
         """, employee_id, start_date, end_date, leave_type, reason)
 
         flash("Leave request submitted successfully.", "success")
-        return redirect("/leave")
+        if session.get('user_role') == "Admin":
+            return redirect("/leave")
+        else:
+            return redirect("/my_leave_requests")
 
     employees = db.execute("SELECT id, first_name || ' ' || last_name AS name FROM employee ORDER BY name")
-    return render_template("leave/add_leave.html", title="Submit Leave Request", employees=employees)
+    return render_template("leave/add_leave.html", title="Leave Request", employees=employees)
 
 @app.route("/leave/edit/<int:leave_id>", methods=["GET", "POST"])
 @login_required
@@ -1366,6 +1401,7 @@ def edit_leave(leave_id):
 
 @app.route("/leave/delete/<int:leave_id>", methods=["POST"])
 @login_required
+@role_required(["Admin"])
 def delete_leave(leave_id):
     """Delete leave request"""
     leave = db.execute("SELECT * FROM leave_request WHERE id = ?", leave_id)
@@ -1381,6 +1417,7 @@ def delete_leave(leave_id):
 
 @app.route("/payroll_details")
 @login_required
+@role_required(["Admin"])
 def payroll_details():
     """Show detailed payroll information for the next payroll cycle."""
 
@@ -1439,6 +1476,7 @@ def payroll_details():
 
 @app.route("/download_payroll")
 @login_required
+@role_required(["Admin"])
 def download_payroll():
     """Download payroll details as an Excel file."""
 
@@ -1481,6 +1519,7 @@ def download_payroll():
 
 @app.route("/generate_report")
 @login_required
+@role_required(["Admin"])
 def generate_report():
     # Fetch payroll data for the current month
 
@@ -1542,6 +1581,7 @@ def generate_report():
 
 @app.route("/generate_attendance_log")
 @login_required
+@role_required(["Admin"])
 def generate_attendance_log():
     """Generate attendance log CSV for the current month"""
 
@@ -1699,6 +1739,7 @@ def profile():
         WHERE e.id = ?
     """
     
+    
     payroll = db.execute(payroll_query, last_day_of_month, first_day_of_month, user_data['employee_id'], user_data['employee_id'])[0]['payroll']
 
     user_data["leave_days"] = leave_days
@@ -1707,10 +1748,172 @@ def profile():
     return render_template("others/profile.html", title="Profile", user_data=user_data)
 
 
+@app.route("/my_leave_requests")
+@login_required
+def my_leave_requests():
+    """My Leave Requests"""
+    employee_id = session.get('employee_id')
+    
+    leave_requests = db.execute("""
+        SELECT id, leave_type, start_date, end_date, status
+        FROM leave_request
+        WHERE employee_id = ?
+        ORDER BY created_at DESC
+    """, employee_id)
+
+    return render_template("others/my_leave_requests.html", 
+                           title="My Leave Requests", 
+                           leave_requests=leave_requests)
+
+
+@app.route("/my_attendance")
+@login_required
+def my_attendance():
+    """My Attendance"""
+
+    from datetime import datetime, timedelta, date
+    employee_id = session.get('employee_id')    
+
+    # Get the current date and the date 30 days ago
+    today = date.today()
+    thirty_days_ago = today - timedelta(days=30)
+    
+    leave_requests = db.execute("""
+        SELECT start_date, end_date, leave_type, status
+        FROM leave_request
+        WHERE employee_id = ? 
+        AND (
+            (start_date BETWEEN ? AND ?) 
+            OR (end_date BETWEEN ? AND ?) 
+            OR (start_date <= ? AND end_date >= ?)
+        )
+        ORDER BY start_date DESC
+    """, employee_id, thirty_days_ago, today, thirty_days_ago, today, thirty_days_ago, today)
+
+    # Convert string dates to datetime.date objects
+    for leave in leave_requests:
+        leave['start_date'] = datetime.strptime(leave['start_date'], '%Y-%m-%d').date()
+        leave['end_date'] = datetime.strptime(leave['end_date'], '%Y-%m-%d').date()
+
+    # Generate attendance records excluding Saturdays and Sundays
+    attendance_records = []
+    current_date = thirty_days_ago
+    while current_date <= today:
+        if current_date.weekday() not in (5, 6):
+            status = "Present"
+            for leave in leave_requests:
+                if leave['start_date'] <= current_date <= leave['end_date']:
+                    if leave['status'] == 'Approved':
+                        status = f"On {leave['leave_type']} Leave"
+                    elif leave['status'] == 'Pending':
+                        status = f"Pending {leave['leave_type']} Leave"
+                    break
+            attendance_records.append({
+                "date": current_date,
+                "status": status
+            })
+        current_date += timedelta(days=1)
+
+    return render_template("others/my_attendance.html", 
+                           title="My Attendance", 
+                           attendance_records=attendance_records)
+
+
+@app.route("/generate_my_attendance_log")
+@login_required
+def generate_my_attendance_log():
+    """Generate attendance log CSV for the current month for the logged-in employee"""
+
+    from datetime import date, timedelta, datetime
+    import io, csv
+    from flask import send_file, flash, redirect, url_for
+    
+    employee_id = session.get('employee_id')
+    today = date.today()
+    year = today.year
+    month = today.month
+
+    # Get the first and last day of the current month
+    first_day_of_month = today.replace(day=1)
+    last_day_of_month = (first_day_of_month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+    employee_data = db.execute("""
+        SELECT e.id as employee_id,
+               e.first_name || ' ' || e.last_name as employee_name,
+               GROUP_CONCAT(lr.start_date || '|' || lr.end_date || '|' || lr.status, ';') AS leave_periods
+        FROM employee e
+        LEFT JOIN leave_request lr 
+        ON e.id = lr.employee_id 
+        AND lr.start_date <= ? 
+        AND lr.end_date >= ?
+        WHERE e.id = ?
+        GROUP BY e.id
+    """, last_day_of_month, first_day_of_month, employee_id)
+
+    if not employee_data:
+        flash("Employee data not found.", "danger")
+        return redirect(url_for('profile'))
+
+    employee = employee_data[0]
+
+    # Create CSV output
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    header = ['Employee Name', 'Year', 'Month']
+    days_of_month = [(first_day_of_month + timedelta(days=i)) for i in range((last_day_of_month - first_day_of_month).days + 1)]
+    weekdays = [day for day in days_of_month if day.weekday() not in (5, 6)]
+
+    header += [str(day.day) for day in weekdays]
+    writer.writerow(header)
+
+    attendance_row = [
+        employee['employee_name'],
+        year,
+        month
+    ]
+    attendance_days = ['Present'] * len(weekdays)
+
+    # Handle leave periods
+    if employee['leave_periods']:
+        leave_periods = employee['leave_periods'].split(';')
+        for period in leave_periods:
+            if period:
+                start_str, end_str, status = period.split('|')
+                start_date = datetime.strptime(start_str, '%Y-%m-%d').date()
+                end_date = datetime.strptime(end_str, '%Y-%m-%d').date()
+
+                for idx, day in enumerate(weekdays):
+                    if start_date <= day <= end_date:
+                        if status == 'Approved':
+                            attendance_days[idx] = 'On Leave'
+                        elif status == 'Pending':
+                            attendance_days[idx] = 'Pending Leave'
+
+    attendance_row.extend(attendance_days)
+    writer.writerow(attendance_row)
+
+    output.seek(0)
+
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8')),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=f"attendance_log_{employee['employee_name']}_{year}-{month}.csv"
+    )
+
+
+@app.route("/my_payroll")
+@login_required
+def my_payroll():
+    return apology("coming soon")
+
+
 @app.route("/settings")
 @login_required
 def settings():
     return apology("coming soon")
+
 
 @app.route("/sign_out")
 def sign_out():

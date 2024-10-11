@@ -11,7 +11,7 @@
                     <p class="text-muted">{{ user_data.role }}</p>
                     <div class="d-grid gap-2 mt-3">
                         <button class="btn btn-primary" type="button">Edit Profile</button>
-                        <button class="btn btn-outline-secondary" type="button">Change Password</button>
+                        <button class="btn btn-outline-secondary" type="button" onclick="window.location.href='/change_password'">Change Password</button>
                     </div>
                 </div>
             </div>
@@ -19,9 +19,9 @@
                 <div class="card-body">
                     <h5 class="card-title">Quick Links</h5>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><a href="/leave" class="text-decoration-none">My Leave Requests</a></li>
-                        <li class="list-group-item"><a href="#" class="text-decoration-none">My Attendance</a></li>
-                        <li class="list-group-item"><a href="#" class="text-decoration-none">My Payroll</a></li>
+                        <li class="list-group-item"><a href="/my_leave_requests" class="text-decoration-none">My Leave Requests</a></li>
+                        <li class="list-group-item"><a href="/my_attendance" class="text-decoration-none">My Attendance</a></li>
+                        <li class="list-group-item"><a href="/my_payroll" class="text-decoration-none">My Payroll</a></li>
                     </ul>
                 </div>
             </div>

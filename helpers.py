@@ -48,6 +48,24 @@ def login_required(f):
     return decorated_function
 
 
+def role_required(roles):
+    """
+    Decorator to restrict access to users with specific roles.
+    
+    :param roles: List of roles allowed to access the route
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user_role = session.get('user_role')
+            if user_role not in roles:
+                # Redirect to some page, like a "no access" page or their profile
+                return redirect("/profile")
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def generate_readable_password(length=8):
     """Generate a random user-readable password."""
 

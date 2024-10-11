@@ -15,7 +15,7 @@
             </div>
 
             <div class="text-center mt-3">
-                <a href="/{% block item_list %}{% endblock %}" class="btn btn-secondary">Back to {{ title | replace('Add ', '') | replace('Edit ', '') }} List</a>
+                <a href="/{% block item_list %}{% endblock %}" class="btn btn-secondary">Back to {% if session['user_role'] == "Admin" %}{% if request.path != '/change_password' %}{{ title | replace('Add ', '') | replace('Edit ', '') }} List {% else %} Profile {% endif %}{% else %}My Leave Requests{% endif %}</a>
             </div>
         </div>
     </div>

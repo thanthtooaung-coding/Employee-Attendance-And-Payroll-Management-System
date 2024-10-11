@@ -1,0 +1,41 @@
+{% extends "layouts/layout.html" %}
+
+{% block main %}
+<div class="container mt-4" style="margin-bottom: 70px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Attendance</h1>
+        <a href="{{ url_for('generate_my_attendance_log') }}" class="btn btn-dark">
+            <i class="bi bi-download me-2"></i>Download Attendance Log
+        </a>
+    </div>
+    
+    {% if attendance_records %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.date.strftime('%A') }}</td> <!-- Display weekday like Monday -->
+                        <td>
+                            <span class="badge bg-{{ 'success' if record.status == 'Present' else 'warning' if record.status.startswith('Pending') else 'info' }}">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No attendance records found.</p>
+    {% endif %}
+</div>
+{% endblock %}

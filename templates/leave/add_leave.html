@@ -39,4 +39,4 @@
 </form>
 {% endblock %}
 
-{% block item_list %}leave{% endblock %}
+{% block item_list %}{% if session['user_role'] == "Admin" %}leave{% else %}my_leave_requests{% endif %}{% endblock %}

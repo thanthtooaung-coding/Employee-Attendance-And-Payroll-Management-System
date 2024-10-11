@@ -129,11 +129,16 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Recent Leave Requests</h5>
-                    <ul class="list-group list-group-flush mb-3">
-                        {% for request in recent_leave_requests %}
-                            <li class="list-group-item">{{ request.name }} - {{ request.type }} ({{ request.duration }})</li>
-                        {% endfor %}
-                    </ul>
+                    {% if recent_leave_requests %}
+                        <ul class="list-group list-group-flush mb-3">
+                            {% for request in recent_leave_requests %}
+                                <li class="list-group-item">{{ request.name }} - {{ request.type }} ({{ request.duration }})</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                            <p class="text-muted mt-3 mb-3">No recent leave requests.</p>
+                            <p class="text-muted mb-4">Please check back later for updates.</p>
+                        {% endif %}
                     <button class="btn btn-outline-primary w-100" onclick="window.location.href='/leave'">
                         View All Requests <i class="bi bi-arrow-right ms-2"></i>
                     </button>
