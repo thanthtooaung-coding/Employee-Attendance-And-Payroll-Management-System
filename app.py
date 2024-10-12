@@ -237,11 +237,15 @@ def index():
     from datetime import datetime
 
     today = datetime.today()
+    # Generate the past 7 days (from 6 days ago to today)
     days_of_week = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(6, -1, -1)]
+    # Generate the corresponding day names (Monday, Tuesday, etc.)
+    day_labels = [(today - timedelta(days=i)).strftime('%A') for i in range(6, -1, -1)]
 
     attendance_data = []
     leave_data = []
 
+    # Loop through each day and fetch data
     for day in days_of_week:
         present_count = db.execute("""
             SELECT COUNT(*) as count
@@ -261,8 +265,8 @@ def index():
             AND status = 'Approved'
         """, day)[0]['count']
 
-    attendance_data.append(present_count)
-    leave_data.append(leave_count)
+        attendance_data.append(present_count)
+        leave_data.append(leave_count)
     
     payroll_data = []
     months = [(today.replace(day=1) - timedelta(days=30 * i)).strftime('%Y-%m') for i in range(6, 0, -1)]
@@ -342,6 +346,7 @@ def index():
                            pending_count=pending_count,
                            pending_rate=pending_rate,
                            total_salary=total_salary,
+                           day_labels=day_labels,
                            attendance_data=attendance_data,
                            leave_data=leave_data,
                            payroll_data=payroll_data,

@@ -184,7 +184,7 @@
     var attendanceChart = new Chart(attendanceCtx, {
         type: 'bar',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            labels: {{ day_labels | tojson }},
             datasets: [{
                 label: 'Present',
                 data: attendanceData,
